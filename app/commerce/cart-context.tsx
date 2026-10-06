@@ -11,7 +11,7 @@ import {
 
 import type { CartLine, Product, ProductVariant } from "@/lib/commerce/types";
 
-const STORAGE_KEY = "the-edit-mock-cart-v1";
+const STORAGE_KEY = "the-edit-bag-v2";
 
 type CartContextValue = {
   lines: CartLine[];
@@ -20,6 +20,8 @@ type CartContextValue = {
   isOpen: boolean;
   notice: string;
   checkoutUrl?: string;
+  ready: boolean;
+  clearCart: () => void;
   addItem: (
     product: Product,
     variant: ProductVariant,
@@ -41,30 +43,37 @@ function validStoredLines(value: unknown): value is CartLine[] {
       (line) =>
         line &&
         typeof line === "object" &&
-        typeof line.id === "string" &&
+        typeof line.id === "string" && typeof line.merchandiseId === "string" &&
         typeof line.quantity === "number" &&
-        line.product &&
-        line.variant,
+        Number.isInteger(line.quantity) && line.quantity > 0 && line.quantity <= 20 &&
+        line.product?.featuredImage && typeof line.product.featuredImage.url === "string" &&
+        typeof line.product.title === "string" && typeof line.product.handle === "string" &&
+        line.variant?.price && typeof line.variant.price.amount === "string" &&
+        Number.isFinite(Number(line.variant.price.amount)) && Number(line.variant.price.amount) > 0 &&
+        typeof line.variant.title === "string" && typeof line.variant.price.currencyCode === "string",
     )
   );
 }
 
-export function CartProvider({ children }: { children: React.ReactNode }) {
+export function CartProvider({ children, independent = false }: { children: React.ReactNode; independent?: boolean }) {
   const [lines, setLines] = useState<CartLine[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [notice, setNotice] = useState("");
 
   useEffect(() => {
-    try {
-      const stored = window.localStorage.getItem(STORAGE_KEY);
-      const parsed = stored ? JSON.parse(stored) : [];
-      if (validStoredLines(parsed)) setLines(parsed);
-    } catch {
-      // Private browsing may disable storage; the in-memory bag still works.
-    } finally {
-      setHydrated(true);
-    }
+    let active = true;
+    Promise.resolve().then(() => {
+      if(!active) return;
+      try {
+        const stored = window.localStorage.getItem(STORAGE_KEY);
+        const parsed = stored ? JSON.parse(stored) : [];
+        if(validStoredLines(parsed)) setLines(parsed);
+      } catch {
+        // Private browsing may disable storage; the in-memory bag still works.
+      } finally { setHydrated(true); }
+    });
+    return () => { active = false; };
   }, []);
 
   useEffect(() => {
@@ -98,7 +107,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         const existing = current.find(
           (line) => line.merchandiseId === variant.id,
         );
-        const maximum = variant.quantityAvailable ?? Number.POSITIVE_INFINITY;
+        const maximum = Math.min(20,variant.quantityAvailable ?? 20);
 
         if (existing) {
           const nextQuantity = Math.min(existing.quantity + quantity, maximum);
@@ -133,7 +142,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         .map((line) => {
           if (line.id !== lineId) return line;
           const maximum =
-            line.variant.quantityAvailable ?? Number.POSITIVE_INFINITY;
+            Math.min(20,line.variant.quantityAvailable ?? 20);
           return { ...line, quantity: Math.min(quantity, maximum) };
         })
         .filter((line) => line.quantity > 0),
@@ -146,6 +155,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const openCart = useCallback(() => setIsOpen(true), []);
   const closeCart = useCallback(() => setIsOpen(false), []);
+  const clearCart = useCallback(() => setLines([]), []);
 
   const value = useMemo<CartContextValue>(() => {
     const itemCount = lines.reduce((sum, line) => sum + line.quantity, 0);
@@ -161,13 +171,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       subtotal,
       isOpen,
       notice,
+      ready: hydrated,
+      clearCart,
+      checkoutUrl: independent ? "/checkout" : undefined,
       addItem,
       updateQuantity,
       removeItem,
       openCart,
       closeCart,
     };
-  }, [addItem, isOpen, lines, notice, removeItem, updateQuantity, openCart, closeCart]);
+  }, [addItem, isOpen, lines, notice, removeItem, updateQuantity, openCart, closeCart, independent, hydrated, clearCart]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

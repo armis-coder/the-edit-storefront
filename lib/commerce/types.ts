@@ -120,7 +120,7 @@ export type Cart = {
 };
 
 export interface CommerceProvider {
-  readonly name: "mock" | "shopify";
+  readonly name: "mock" | "shopify" | "independent";
   getProducts(input?: ProductSearchInput): Promise<Product[]>;
   getProduct(handle: string): Promise<Product | null>;
   getCollections(): Promise<Collection[]>;

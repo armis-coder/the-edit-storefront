@@ -23,11 +23,21 @@ type HomeClientProps = {
 
 export function HomeClient({ categories, products }: HomeClientProps) {
   const [subscribed, setSubscribed] = useState(false);
+  const [subscribeError, setSubscribeError] = useState("");
+  const [subscribeBusy, setSubscribeBusy] = useState(false);
   const [motionPaused, setMotionPaused] = useState(false);
 
-  function submitNewsletter(event: FormEvent<HTMLFormElement>) {
+  async function submitNewsletter(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setSubscribed(true);
+    const form = new FormData(event.currentTarget);
+    setSubscribeBusy(true); setSubscribeError("");
+    try {
+      const response = await fetch("/api/store/subscribe",{ method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: form.get("email"), consent: true }) });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+      setSubscribed(true);
+    } catch(error) { setSubscribeError((error as Error).message); }
+    finally { setSubscribeBusy(false); }
   }
 
   return (
@@ -182,15 +192,16 @@ export function HomeClient({ categories, products }: HomeClientProps) {
         <h2>Get the next drop.</h2>
         <p>New finds, field notes and limited restocks. Sent only when there is something worth opening.</p>
         {subscribed ? (
-          <div className="subscribe-success" role="status">Preview complete. No email has been stored.</div>
+          <div className="subscribe-success" role="status">You’re on the list. We’ll be in touch when the next edit is ready.</div>
         ) : (
           <form onSubmit={submitNewsletter}>
             <label className="sr-only" htmlFor="newsletter-email">Email address</label>
-            <input id="newsletter-email" type="email" placeholder="YOUR EMAIL ADDRESS" required />
-            <button type="submit">Join the list </button>
+            <input id="newsletter-email" name="email" type="email" placeholder="YOUR EMAIL ADDRESS" required />
+            <button type="submit" disabled={subscribeBusy}>{subscribeBusy ? "Joining…" : "Join the list"}</button>
           </form>
         )}
-        <small>Prototype interaction—no email is stored or sent.</small>
+        {subscribeError && <p role="alert">{subscribeError}</p>}
+        <small>By joining, you agree to receive collection updates. <Link href="/policies/privacy">Privacy policy</Link>.</small>
       </section>
 
       <StoreFooter />

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import "./atelier.css";
+import "./store-system.css";
 
 import { CartProvider } from "./commerce/cart-context";
 import { CartDrawer } from "./components/cart-drawer";
@@ -8,6 +9,7 @@ import { CartDrawer } from "./components/cart-drawer";
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.SITE_URL ?? (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "https://curated-mens-gear.arezasif7.chatgpt.site")),
   title: "The Curated Goods Storefront",
+  robots: { index: process.env.COMMERCE_PROVIDER === "independent", follow: process.env.COMMERCE_PROVIDER === "independent" },
   description: "A refined Pakistani storefront for curated men's gear, EDC, accessories and collectible objects.",
   openGraph: {
     title: "The Curated Goods Storefront",
@@ -31,7 +33,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en">
       <body>
-        <CartProvider>
+        <CartProvider independent={process.env.COMMERCE_PROVIDER === "independent"}>
           {children}
           <CartDrawer />
         </CartProvider>

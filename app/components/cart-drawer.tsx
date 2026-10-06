@@ -142,7 +142,7 @@ export function CartDrawer() {
                 </div>
                 <p>{checkoutUrl ? "Delivery is calculated at checkout." : "This is a preview bag. Products and prices are examples; checkout is not active."}</p>
                 {checkoutUrl ? (
-                  <a className="cart-checkout" href={checkoutUrl}>
+                  <a className="cart-checkout" href={checkoutUrl} onClick={closeCart}>
                     Continue to secure checkout
                   </a>
                 ) : (

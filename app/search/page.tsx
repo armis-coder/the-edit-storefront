@@ -6,6 +6,7 @@ import { SearchForm } from "@/app/commerce/search-form";
 import { StoreFooter } from "@/app/components/store-footer";
 import { StoreHeader } from "@/app/components/store-header";
 import { getCommerceProvider } from "@/lib/commerce/provider";
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Search the collection | The Edit",

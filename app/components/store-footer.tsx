@@ -23,19 +23,19 @@ export function StoreFooter() {
           </div>
           <div>
             <span>Help</span>
-            <Link href="/#newsletter">Delivery notes</Link>
-            <Link href="/#newsletter">Contact</Link>
-            <Link href="/#newsletter">Returns framework</Link>
+            <Link href="/policies/delivery">Delivery</Link>
+            <Link href="/contact">Contact</Link>
+            <Link href="/policies/returns">Returns & refunds</Link>
+            <Link href="/policies/privacy">Privacy</Link>
           </div>
         </div>
       </div>
       <div className="footer-bottom">
         <p>
-          Prototype catalogue and policies. Final products, age controls,
-          delivery rules and applicable legal requirements will be confirmed
-          before launch.
+          Objects chosen for purpose, construction and value. Read each
+          product’s dispatch details and our delivery policy before ordering.
         </p>
-        <span>© 2026 / WORKING IDENTITY 01</span>
+        <span>© 2026 / THE EDIT</span>
       </div>
     </footer>
   );

@@ -1,54 +1,43 @@
-# THE / EDIT storefront
+# THE / EDIT
 
-Custom, responsive storefront for curated men's gear. The latest visual direction uses graphite surfaces, silver controls, restrained product imagery and a lightweight animated light field. The earlier Obsidian Core experiment is retained in source but is not rendered on the homepage.
+Independent ecommerce storefront for curated men's gear in Pakistan. The approved graphite, silver and slate visuals and animated LightField homepage are preserved. Shopify is no longer required for the active commerce system.
 
-## Current functionality
+## Implemented
 
-- Homepage, collection browsing, search and product detail routes
-- Variant selection, device-local shopping bag and saved products
-- Replaceable commerce provider with representative mock catalogue data
-- Server-side Shopify Storefront API adapter for catalogue and cart operations
+- Homepage, collections, product details, search, saved objects and shopping bag.
+- PostgreSQL catalogue with options, prices, stock, curation notes and image uploads.
+- Protected `/admin` for products, orders, payments, tracking, subscribers, delivery settings and policies.
+- Guest checkout in PKR with cash on delivery and bank transfer; server pricing and transactional stock reservation.
+- Duplicate-request protection, interrupted-checkout recovery, private receipts and cancellation/restocking.
+- Customer receipt and owner alert email outbox, with optional Resend delivery and admin retry.
 
-This is a prototype. The shopping bag is still local; Shopify cart persistence and checkout handoff are not connected. Checkout is disabled. Newsletter submissions are not collected. There is no custom merchant admin UI. Product, inventory and order management will use Shopify's admin after integration.
+This is **not an activated customer store**. Production database, owner credentials, real catalogue, courier and email sender still need configuration. Checkout starts closed. No card information is collected.
 
-## Local Next.js development
+## Develop and verify
 
 Use Node.js 22.13 or newer.
 
 ```bash
 npm ci
-npm run dev:vercel
+npm run dev
 ```
 
-For a production build:
+With no configuration, the existing representative mock catalogue remains available. For the independent local system, copy `.env.example` to `.env.local`, leave `DATABASE_URL` empty and set `STORE_DEVELOPMENT_DB=.store-db`. Generate private owner values in your own terminal with `npm run store:credentials`; set `ADMIN_EMAIL` and the local `SITE_URL` too. Never commit these values.
+
+The database starts empty. Add test objects in `/admin`, or explicitly run `npm run store:demo` to add draft, zero-stock representative objects locally. This script refuses to seed production.
 
 ```bash
-npm run build:vercel
-npm run start:vercel
+npm run test:commerce
+npm run test:http
+npm run build
+node scripts/verify-next.mjs
+npm run lint
 ```
 
-After building, run the Next.js route verification with `node scripts/verify-next.mjs`.
+Commerce tests use isolated PGlite PostgreSQL. HTTP tests start an isolated Next.js server and exercise actual admin, upload, checkout, receipt and newsletter endpoints without production credentials or data. Production route verification runs in mock mode. Run only one Next.js development server per source directory at a time.
 
-## Deploy to Vercel
+## Launch
 
-Import `armis-coder/the-edit-storefront` from GitHub. Use the repository root, the Next.js framework preset, Node.js 22.x and the default output directory. `vercel.json` configures `npm run build:vercel`; do not select the Sites build script or set the output directory to `dist`.
+Follow [the independent store launch guide](docs/independent-store-launch.md). Use a commercial-eligible Node.js host and hosted PostgreSQL. On Vercel, import this repository with the Next.js preset and default output directory. On another Node.js host, use `npm run build` and `npm start` behind HTTPS.
 
-No Shopify credentials are needed to preview mock mode. Once the Git integration is connected, pushes to `main` can trigger production deployments. Set `SITE_URL` to the final public origin when known.
-
-## Shopify connection
-
-Keep mock mode until Shopify is configured and the remaining cart integration is tested. The implementation and account checklist are documented in:
-
-- [Integration contract](docs/shopify-integration-contract.md)
-- [Shopify setup checklist](docs/shopify-setup-checklist.md)
-- [Deployment handoff](docs/vercel-handoff.md)
-
-Shopify credentials belong in server-side hosting environment variables, never source control. Selecting `COMMERCE_PROVIDER=shopify` is not sufficient to finish checkout; the shopping bag still needs to be wired to Shopify's cart API and returned checkout URL.
-
-## Existing Sites runtime
-
-The original Sites/Vinext build is preserved alongside Next.js: `npm run dev`, `npm run build`, `npm start`, and `npm test` target that runtime. The Vercel scripts above target standard Next.js. Both runtimes share the same application code and assets.
-
-## Source checkpoint
-
-The storefront application was recovered from saved source commit `8c6b1cffdaa97a4f62efa35ddcacb6b220bbbb80`. The GitHub handoff adds these deployment instructions without changing the validated storefront implementation.
+Older Shopify code/documents remain for reference and are unused in independent mode. Original Sites/Vinext scripts remain under `dev:sites`, `build:sites`, `start:sites` and `test:sites`; the independent backend targets standard Next.js and has not been validated on that worker runtime.
